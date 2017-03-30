@@ -6,7 +6,7 @@ Install
 Install NodeJS. After that run:  
 `git clone https://github.com/MorbZ/NodeUsbLed`  
 `cd NodeUsbLed`  
-`npm install node-hid sprintf-js request xml2js ws` 
+`npm install node-hid sprintf-js ws yql`
 
 To run:  
 `node rotate.js`
