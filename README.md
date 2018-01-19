@@ -1,12 +1,5 @@
-This is a NodeJS driver/framework for the "Dream Cheeky USB Message Board". It contains preinstalled plugins for weather, clock and Bitcoin exchange rate. Custom plugins can be easily written.
+## GoUsbLed ##
 
-Install
---------------
+Bitcoin price ticker for the USB Message Board from Dream Cheeky. Shows the current Bitcoin USD price from Bitstamp.
 
-Install NodeJS. After that run:  
-`git clone https://github.com/MorbZ/NodeUsbLed`  
-`cd NodeUsbLed`  
-`npm install node-hid sprintf-js ws yql`
-
-To run:  
-`node rotate.js`
+![USB Message Board](img/board.jpg)
