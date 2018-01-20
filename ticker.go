@@ -7,26 +7,28 @@ import (
 	"time"
 )
 
-const BitstampAppKey = "de504dc5763aeef9ff52"
+const bitstampAppKey = "de504dc5763aeef9ff52"
 
-type BitstampEventStub struct {
+type bitstampEventStub struct {
 	Price float64 `json:"price"`
 }
 
+// Ticker informs about price changes via channels
 type Ticker struct{}
 
+// Start connection with Pusher
 func (t *Ticker) Start(priceChannel chan float64, disconnectChannel chan bool) {
 	for {
-		t.ConnectPusher(priceChannel)
+		t.connectPusher(priceChannel)
 		disconnectChannel <- true
 		time.Sleep(5 * time.Second)
 	}
 }
 
 // Function returns on error
-func (t *Ticker) ConnectPusher(priceChannel chan float64) {
+func (t *Ticker) connectPusher(priceChannel chan float64) {
 	// Connect
-	pusherClient, err := pusher.NewClient(BitstampAppKey)
+	pusherClient, err := pusher.NewClient(bitstampAppKey)
 	if err != nil {
 		log.Println("Connection error: ", err)
 		return
@@ -56,7 +58,7 @@ func (t *Ticker) ConnectPusher(priceChannel chan float64) {
 	for {
 		select {
 		case tradeEvent := <-tradeChannel:
-			var bitstampEvent BitstampEventStub
+			var bitstampEvent bitstampEventStub
 			err = json.Unmarshal([]byte(tradeEvent.Data), &bitstampEvent)
 			if err != nil {
 				log.Println("JSON error: ", err)

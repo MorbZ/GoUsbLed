@@ -8,67 +8,76 @@ import (
 )
 
 const (
-	HIDVendorId             = 0x1D34
-	HIDProductId            = 0x0013
-	BoardWidth, BoardHeight = 21, 7
-	BytesPerRow             = 3
-	RowsPerPacket           = 2
-	NumPackets              = 4
-	DisplayClearInterval    = time.Millisecond * 400
+	// BoardWidth Number of horizintal LEDs
+	BoardWidth = 21
+
+	// BoardHeight Number of vertical LEDs
+	BoardHeight = 7
+
+	hidVendorID          = 0x1D34
+	hidProductID         = 0x0013
+	bytesPerRow          = 3
+	rowsPerPacket        = 2
+	numPackets           = 4
+	displayClearInterval = time.Millisecond * 400
 )
 
+// LedArray for each LED on the message board
 type LedArray [BoardWidth][BoardHeight]bool
 
+// Reset turn off all LEDs
 func (l *LedArray) Reset() {
-	for x, _ := range l {
-		for y, _ := range l[x] {
+	for x := range l {
+		for y := range l[x] {
 			l[x][y] = false
 		}
 	}
 }
 
 // USB packets
-type Packets [NumPackets][]byte
+type packets [numPackets][]byte
 
+// Board connects and communicates with the USB message board
 type Board struct {
-	Device     *hid.Device
-	DeviceLock sync.Mutex
-	Timer      *time.Timer
-	Packets    *Packets
+	device     *hid.Device
+	deviceLock sync.Mutex
+	timer      *time.Timer
+	Packets    *packets
 }
 
+// Start connection to the message board
 func (b *Board) Start(ledChannel <-chan LedArray) {
 	// Connect to display
-	go b.ConnectDisplay()
+	go b.connectDisplay()
 
 	// Update display on new data or timer
-	b.Timer = time.NewTimer(DisplayClearInterval)
+	b.timer = time.NewTimer(displayClearInterval)
 	for {
 		select {
 		case ledArray := <-ledChannel:
-			b.Packets = ConvertLedArray(&ledArray)
-			b.UpdateDisplay()
+			b.Packets = convertLedArray(&ledArray)
+			b.updateDisplay()
 
-		case <-b.Timer.C:
-			b.UpdateDisplay()
+		case <-b.timer.C:
+			b.updateDisplay()
 		}
 	}
 }
 
-func (b *Board) ConnectDisplay() {
+func (b *Board) connectDisplay() {
 	for {
 		// Search for device
 		log.Println("Searching for devices..")
-		deviceInfos := hid.Enumerate(HIDVendorId, HIDProductId)
+		deviceInfos := hid.Enumerate(hidVendorID, hidProductID)
 		if len(deviceInfos) > 0 {
 			// Connect to device
 			deviceInfo := deviceInfos[0]
 			device, err := deviceInfo.Open()
 
 			if err == nil {
-				b.DeviceLock.Lock()
-				b.Device = device
-				b.DeviceLock.Unlock()
+				b.deviceLock.Lock()
+				b.device = device
+				b.deviceLock.Unlock()
 				log.Println("Connected to device.")
 				return
 			}
@@ -77,49 +86,49 @@ func (b *Board) ConnectDisplay() {
 	}
 }
 
-func (b *Board) UpdateDisplay() {
+func (b *Board) updateDisplay() {
 	// Reset timer
-	b.Timer.Reset(DisplayClearInterval)
+	b.timer.Reset(displayClearInterval)
 
 	// Lock device
-	b.DeviceLock.Lock()
-	defer b.DeviceLock.Unlock()
-	if b.Packets == nil || b.Device == nil {
+	b.deviceLock.Lock()
+	defer b.deviceLock.Unlock()
+	if b.Packets == nil || b.device == nil {
 		return
 	}
 
 	// Write packets
 	for _, packetBytes := range b.Packets {
-		_, err := b.Device.Write(packetBytes)
+		_, err := b.device.Write(packetBytes)
 
 		// Reconnect to device on error
 		if err != nil {
-			b.Device = nil
+			b.device = nil
 			log.Println("Device error: ", err)
-			go b.ConnectDisplay()
+			go b.connectDisplay()
 			return
 		}
 	}
 }
 
 // Convert the LED array to USB packets
-func ConvertLedArray(ledArray *LedArray) *Packets {
-	packets := Packets{}
-	for packetIndex := 0; packetIndex < NumPackets; packetIndex++ {
-		rowOffset := packetIndex * RowsPerPacket
+func convertLedArray(ledArray *LedArray) *packets {
+	packets := packets{}
+	for packetIndex := 0; packetIndex < numPackets; packetIndex++ {
+		rowOffset := packetIndex * rowsPerPacket
 
 		// Init packet {0, brightness, starting row}
 		packetBytes := make([]byte, 0, 9)
 		packetBytes = append(packetBytes, []byte{0, 0, byte(rowOffset)}...)
 
-		for packetRowOffset := 0; packetRowOffset < RowsPerPacket; packetRowOffset++ {
+		for packetRowOffset := 0; packetRowOffset < rowsPerPacket; packetRowOffset++ {
 			y := rowOffset + packetRowOffset
 			if y >= BoardHeight {
 				break
 			}
 
 			// Set single LEDs
-			rowBytes := [BytesPerRow]byte{}
+			rowBytes := [bytesPerRow]byte{}
 			byteCursor := 2
 			bitCursor := byte(0)
 			for x := 0; x < BoardWidth; x++ {
@@ -137,7 +146,7 @@ func ConvertLedArray(ledArray *LedArray) *Packets {
 			}
 
 			// Invert bits
-			for i, _ := range rowBytes {
+			for i := range rowBytes {
 				rowBytes[i] ^= 0xFF
 			}
 			packetBytes = append(packetBytes, rowBytes[:]...)

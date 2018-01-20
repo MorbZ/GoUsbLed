@@ -39,6 +39,7 @@ func main() {
 }
 
 func makeLoadingScreen() *LedArray {
+	// TODO: Make animated loading screen
 	ledArray := LedArray{}
 	for x := 8; x <= 12; x += 2 {
 		ledArray[x][6] = true

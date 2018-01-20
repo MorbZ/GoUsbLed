@@ -1,16 +1,17 @@
 package main
 
-type Font map[rune][]byte
+type font map[rune][]byte
 
-// Must only be created with constructor
+// Text must only be created with constructor
 type Text struct {
-	fontNormal, fontSlim Font
+	fontNormal, fontSlim font
 }
 
+// NewText returns a new text handler
 func NewText() *Text {
 	t := Text{}
 
-	t.fontNormal = Font{
+	t.fontNormal = font{
 		'0': {0x3E, 0x41, 0x41, 0x3E},
 		'1': {0x00, 0x02, 0x7F, 0x00},
 		'2': {0x62, 0x51, 0x49, 0x46},
@@ -22,7 +23,7 @@ func NewText() *Text {
 		'8': {0x36, 0x49, 0x49, 0x36},
 		'9': {0x06, 0x49, 0x49, 0x3E},
 	}
-	t.fontSlim = Font{
+	t.fontSlim = font{
 		'0': {0x3E, 0x41, 0x3E},
 		'1': {0x00, 0x02, 0x7F},
 		'2': {0x62, 0x51, 0x4E},
@@ -37,12 +38,12 @@ func NewText() *Text {
 	return &t
 }
 
-// Centers the text on the screen
+// MakeText return LedArray with centered text
 func (t *Text) MakeText(str string) *LedArray {
 	// Select font
 	// TODO: Only count valid characters
 	runes := []rune(str)
-	var font Font
+	var font font
 	if len(runes) > 4 {
 		font = t.fontSlim
 	} else {
