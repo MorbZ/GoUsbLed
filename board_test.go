@@ -69,6 +69,13 @@ func TestEdgesScreen(t *testing.T) {
 }
 
 func checkConvertLedArray(t *testing.T, expectedPackets *packets, ledArray *LedArray) {
+	// Remove first byte if not required
+	if !hidPacketHasZeroByte {
+		for i, packet := range expectedPackets {
+			expectedPackets[i] = packet[1:]
+		}
+	}
+
 	packets := convertLedArray(ledArray)
 	if !reflect.DeepEqual(packets, expectedPackets) {
 		t.Fatal("Packets don't match", "Got:", packets, "Expected:", expectedPackets)

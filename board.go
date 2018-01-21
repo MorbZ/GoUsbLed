@@ -117,9 +117,12 @@ func convertLedArray(ledArray *LedArray) *packets {
 	for packetIndex := 0; packetIndex < numPackets; packetIndex++ {
 		rowOffset := packetIndex * rowsPerPacket
 
-		// Init packet {0, brightness, starting row}
+		// Init packet {(0), brightness, starting row}
 		packetBytes := make([]byte, 0, 9)
-		packetBytes = append(packetBytes, []byte{0, 0, byte(rowOffset)}...)
+		if hidPacketHasZeroByte {
+			packetBytes = append(packetBytes, 0)
+		}
+		packetBytes = append(packetBytes, 0, byte(rowOffset))
 
 		for packetRowOffset := 0; packetRowOffset < rowsPerPacket; packetRowOffset++ {
 			y := rowOffset + packetRowOffset
