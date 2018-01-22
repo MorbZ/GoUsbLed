@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/toorop/go-pusher"
 	"log"
 	"time"
@@ -58,16 +59,28 @@ func (t *Ticker) connectPusher(priceChannel chan float64) {
 	for {
 		select {
 		case tradeEvent := <-tradeChannel:
-			var bitstampEvent bitstampEventStub
-			err = json.Unmarshal([]byte(tradeEvent.Data), &bitstampEvent)
+			price, err := getPriceForEventData(tradeEvent.Data)
 			if err != nil {
 				log.Println("JSON error: ", err)
 				return
 			}
-			priceChannel <- bitstampEvent.Price
+			priceChannel <- price
 		case errEvent := <-errChannel:
 			log.Println("ErrEvent: " + errEvent.Data)
 			return
 		}
 	}
+}
+
+func getPriceForEventData(eventData string) (float64, error) {
+	var bitstampEvent bitstampEventStub
+	err := json.Unmarshal([]byte(eventData), &bitstampEvent)
+	if err != nil {
+		return 0, err
+	}
+	if bitstampEvent.Price == 0 {
+		err = errors.New("Price is 0")
+		return 0, err
+	}
+	return bitstampEvent.Price, nil
 }
