@@ -11,7 +11,7 @@ Bitcoin price ticker for the USB Message Board from Dream Cheeky. Shows the curr
     $ [sudo] GoUsbLed
 
 ### Using Docker
-    $ docker run --rm --privileged morbz/gousbled
+    $ docker run --rm --privileged -v /dev/bus/usb:/dev/bus/usb morbz/gousbled
 
 Or using Docker compose:
 

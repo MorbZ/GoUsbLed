@@ -5,3 +5,5 @@ services:
     build: .
     restart: always
     privileged: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
