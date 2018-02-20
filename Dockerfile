@@ -3,7 +3,7 @@ FROM golang:1
 WORKDIR /go/src/app
 COPY . .
 
-RUN go-wrapper download
-RUN go-wrapper install
+RUN go get
+RUN go install
 
-CMD ["go-wrapper", "run"] # ["app"]
+CMD ["app"]
